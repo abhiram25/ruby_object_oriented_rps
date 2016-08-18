@@ -39,7 +39,7 @@ class Player
   attr_accessor :move, :name, :score
 
   def initialize
-    @score = 0
+    self.score = 0
     set_name
   end
 end
