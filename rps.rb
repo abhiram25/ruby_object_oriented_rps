@@ -1,7 +1,7 @@
 require 'pry'
 
 class Move
-  VALUES = ["rock", "paper", "scissors"].freeze
+  VALUES = ["rock", "paper", "scissors", "lizard"].freeze
   def initialize(value)
     @value = value
   end
@@ -18,16 +18,25 @@ class Move
     @value == "paper"
   end
 
-  def >(other_move)
-    (rock? && other_move.scissors?) ||
-      (paper? && other_move.rock?) ||
-      (scissors? && other_move.paper?)
+  def lizard?
+    @value == "lizard"
   end
 
-  def <(other_move)
-    (rock? && other_move.paper?) ||
-      (paper? && other_move.scissors?) ||
-      (scissors? && other_move.rock?)
+  def spock?
+    @value == "spock"
+  end
+
+  def >(other_move)
+    (rock? && other_move.scissors?) ||
+    (rock? && other_move.lizard?) ||
+    (lizard? && other_move.spock?) ||
+    (lizard? && other_move.paper?) ||
+    (paper? && other_move.rock?) ||
+    (paper? && other_move.spock?) ||
+    (scissors? && other_move.paper?) ||
+    (scissors? && other_move.lizard?) ||
+    (spock? && other_move.rock?) ||
+    (spock? && other_move.scissors?)
   end
 
   def to_s
@@ -39,7 +48,7 @@ class Player
   attr_accessor :move, :name, :score
 
   def initialize
-    self.score = 0
+    @score = 0
     set_name
   end
 end
@@ -94,7 +103,7 @@ class RPSGame
     if human.move > computer.move
       human.score += 1
       "#{human.name} won!"
-    elsif computer.move < human.move
+    elsif computer.move > human.move
       computer.score += 1
       "#{computer.name} won!"
     else
@@ -113,7 +122,7 @@ class RPSGame
   end
 
   def series_winner(human, computer)
-    human.score == 2 || computer.score == 2
+    human.score == 10 || computer.score == 10
   end
 
   def display_score
