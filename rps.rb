@@ -45,7 +45,7 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name, :score
+  attr_accessor :move, :name, :score, :move_history
 
   def initialize
     @score = 0
@@ -74,6 +74,7 @@ class Human < Player
       puts "Sorry invalid choice"
     end
     self.move = Move.new(choice)
+    self.move_history << choice
   end
 end
 
@@ -84,6 +85,7 @@ class Computer < Player
 
   def choose
     self.move = Move.new(Move::VALUES.sample)
+    self.move_history << move.to_s
   end
 end
 
@@ -103,12 +105,17 @@ class RPSGame
     if human.move > computer.move
       human.score += 1
       "#{human.name} won!"
+      computer.losing_moves << computer.move
     elsif computer.move > human.move
       computer.score += 1
       "#{computer.name} won!"
     else
       "it's a tie"
     end
+  end
+
+  def series_winner(human, computer)
+    human.score == 5 || computer.score == 5
   end
 
   def display_winner
@@ -119,10 +126,6 @@ class RPSGame
     else
       puts detect_winner.to_s
     end
-  end
-
-  def series_winner(human, computer)
-    human.score == 10 || computer.score == 10
   end
 
   def display_score
@@ -145,8 +148,10 @@ class RPSGame
   end
 
   def new_game
-    human.score = 0
     computer.score = 0
+    human.score = 0
+    computer.move_history = []
+    human.move_history = []
   end
 
   def play
@@ -158,6 +163,7 @@ class RPSGame
         computer.choose
         display_winner
         display_score
+        binding.pry
         break if series_winner(human, computer)
       end
       display_goodbye_message
