@@ -1,7 +1,7 @@
 require 'pry'
 
 class Move
-  VALUES = ["rock", "paper", "scissors", "lizard"].freeze
+  VALUES = ["rock", "paper", "scissors", "lizard", "spock"].freeze
   def initialize(value)
     @value = value
   end
@@ -79,18 +79,41 @@ class Human < Player
 end
 
 class Computer < Player
+  attr_accessor :losing_moves
+
+  def initialize
+    super
+    @losing_moves = []
+  end
+
   def set_name
     self.name = ["Tom", "Bill", "Jason"].sample
   end
 
+  def best_options
+    if RPSGame.number_of_turns > 0
+      Move::VALUES.select do |value|
+        # binding.pry
+        losing_moves.count(value).to_f / RPSGame.number_of_turns < 0.4
+      end
+    else
+      Move::VALUES
+    end
+  end
+
   def choose
-    self.move = Move.new(Move::VALUES.sample)
+    self.move = Move.new(best_options.sample)
     self.move_history << move.to_s
   end
 end
 
 class RPSGame
   attr_accessor :human, :computer
+  @@number_of_turns = 0
+
+  def self.number_of_turns
+    @@number_of_turns
+  end
 
   def initialize
     @human = Human.new
@@ -101,30 +124,22 @@ class RPSGame
     puts "Hi #{human.name}, Welcome to Rock, Paper, Scissors!"
   end
 
-  def detect_winner
-    if human.move > computer.move
-      human.score += 1
-      "#{human.name} won!"
-      computer.losing_moves << computer.move
-    elsif computer.move > human.move
-      computer.score += 1
-      "#{computer.name} won!"
-    else
-      "it's a tie"
-    end
-  end
-
   def series_winner(human, computer)
-    human.score == 5 || computer.score == 5
+    human.score == 10 || computer.score == 10
   end
 
   def display_winner
     puts "#{human.name} chose #{human.move}."
     puts "#{computer.name} chose #{computer.move}."
-    if series_winner(human, computer)
-      puts detect_winner.to_s + "won the series"
+    if human.move > computer.move
+      human.score += 1
+      puts "#{human.name} won!"
+      computer.losing_moves << computer.move.to_s
+    elsif computer.move > human.move
+      computer.score += 1
+      puts "#{computer.name} won!"
     else
-      puts detect_winner.to_s
+      puts "it's a tie"
     end
   end
 
@@ -161,9 +176,9 @@ class RPSGame
       loop do
         human.choose
         computer.choose
+        @@number_of_turns += 1
         display_winner
         display_score
-        binding.pry
         break if series_winner(human, computer)
       end
       display_goodbye_message
