@@ -93,7 +93,6 @@ class Computer < Player
   def best_options
     if RPSGame.number_of_turns > 0
       Move::VALUES.select do |value|
-        # binding.pry
         losing_moves.count(value).to_f / RPSGame.number_of_turns < 0.4
       end
     else
