@@ -1,19 +1,19 @@
-# Create a class for each robot
-# Each robot will have a different choose method
+require 'pry'
 
-# Class Tom
-# Tom plays like the computer
+# Write a method that takes one argument, a positive integer,
+# and returns the sum of its digits.
 
-class Tom < Computer
-	attr_reader :name
-	def initialize
-		@name = "Tom"
-	end
+# Given the integer, split the integer into individual digits
+# Convert the integer into a string and save it to a variable
+# called splitted integer.
+
+# iterate through the splitted_integer array and
+# convert each character into a number
+
+def sum(integer)
+	integer.to_s.chars.map {|num| num.to_i}.inject(:+)
 end
 
-# Class Bill
-# Bill mostly chooses scissors, rarely chooses rock
-# Never paper
-
-# Class Jason
-# Jason only chooses rock
+puts sum(23) == 5
+puts sum(496) == 19
+puts sum(123_456_789) == 45

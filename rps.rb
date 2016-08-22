@@ -1,3 +1,5 @@
+require 'pry'
+
 class Move
   VALUES = ["rock", "paper", "scissors", "lizard", "spock"].freeze
   def initialize(value)
@@ -24,17 +26,32 @@ class Move
     @value == "spock"
   end
 
+  def scissors_loses(other_move)
+    ((rock? || spock?) && other_move.scissors?)
+  end
+
+  def rock_loses(other_move)
+    ((spock? || paper?) && other_move.rock?)
+  end
+
+  def lizard_loses(other_move)
+    ((rock? || scissors?) && other_move.lizard?)
+  end
+
+  def spock_loses(other_move)
+    ((lizard? || paper?) && other_move.spock?)
+  end
+
+  def paper_loses(other_move)
+    ((scissors? || lizard?) && other_move.paper?)
+  end
+
   def >(other_move)
-    (rock? && other_move.scissors?) ||
-    (rock? && other_move.lizard?) ||
-    (lizard? && other_move.spock?) ||
-    (lizard? && other_move.paper?) ||
-    (paper? && other_move.rock?) ||
-    (paper? && other_move.spock?) ||
-    (scissors? && other_move.paper?) ||
-    (scissors? && other_move.lizard?) ||
-    (spock? && other_move.rock?) ||
-    (spock? && other_move.scissors?)
+    scissors_loses(other_move) ||
+      rock_loses(other_move) ||
+      lizard_loses(other_move) ||
+      spock_loses(other_move) ||
+      paper_loses(other_move)
   end
 
   def to_s
@@ -46,6 +63,7 @@ class Player
   attr_accessor :move, :name, :score, :move_history
 
   def initialize
+    @losing_moves = []
     @score = 0
     set_name
   end
@@ -71,8 +89,8 @@ class Human < Player
       break if Move::VALUES.include? choice
       puts "Sorry invalid choice"
     end
-    self.move = Move.new(choice)
-    self.move_history << choice
+    @move = Move.new(choice)
+    @move_history << choice
   end
 end
 
@@ -89,9 +107,9 @@ class Computer < Player
   end
 
   def best_options
-    if RPSGame.number_of_turns > 0
+    if !move_history.empty?
       Move::VALUES.select do |value|
-        losing_moves.count(value).to_f / RPSGame.number_of_turns < 0.4
+        losing_moves.count(value).to_f / move_history.length < 0.4
       end
     else
       Move::VALUES
@@ -99,13 +117,13 @@ class Computer < Player
   end
 
   def choose
-    self.move = Move.new(best_options.sample)
-    self.move_history << move.to_s
+    @move = Move.new(best_options.sample)
+    @move_history << move.to_s
   end
 end
 
-class Bill < Player
-  VALUES = ["scissors", "scissors", "rock", "spock"]
+class Bill < Computer
+  VALUES = ["scissors", "scissors", "rock", "spock"].freeze
 
   def set_name
     self.name = "Bill"
@@ -117,7 +135,7 @@ class Bill < Player
   end
 end
 
-class Jason < Player
+class Jason < Computer
   def set_name
     self.name = "Jason"
   end
@@ -129,11 +147,6 @@ end
 
 class RPSGame
   attr_accessor :human, :computer
-  @@number_of_turns = 0
-
-  def self.number_of_turns
-    @@number_of_turns
-  end
 
   def initialize
     @human = Human.new
@@ -150,27 +163,43 @@ class RPSGame
 
   def detect_winner
     if human.move > computer.move
-      computer.losing_moves << computer.move.to_s if computer.name == "Tom"
-      "#{human.name}"
+      human.name.to_s
     elsif computer.move > human.move
-      "#{computer.name}"
+      computer.name.to_s
     else
       "it's a tie"
     end
   end
 
-  def display_winner
+  def display_choices
     puts "#{human.name} chose #{human.move}."
     puts "#{computer.name} chose #{computer.move}."
-    if detect_winner == "#{human.name}"
+  end
+
+  def winner(player)
+    detect_winner == player.name.to_s
+  end
+
+  def update_score(human, computer)
+    if winner(human)
       human.score += 1
-      puts "#{human.name} won!"
-    elsif detect_winner == "#{computer.name}"
+      computer.losing_moves << computer.move.to_s
+    elsif winner(computer)
       computer.score += 1
+    end
+  end
+
+  def display_winner
+    display_choices
+    if winner(human)
+      puts "#{human.name} won!"
+    elsif winner(computer)
       puts "#{computer.name} won!"
     else
       puts "It's a tie"
     end
+    display_score
+    display_series_winner if series_winner(human, computer)
   end
 
   def display_score
@@ -182,9 +211,9 @@ class RPSGame
   end
 
   def display_series_winner
-    if detect_winner == "#{computer.name}"
+    if detect_winner == computer.name.to_s
       puts "#{computer.name} won the series"
-    elsif detect_winner == "#{human.name}"
+    elsif detect_winner == human.name.to_s
       puts "#{human.name} won the series"
     end
   end
@@ -204,7 +233,7 @@ class RPSGame
     computer.score = 0
     human.score = 0
     computer.move_history = []
-    computer.losing_moves = [] if computer.name == "Tom"
+    computer.losing_moves = []
     human.move_history = []
   end
 
@@ -215,19 +244,14 @@ class RPSGame
       loop do
         human.choose
         computer.choose
-        @@number_of_turns += 1
+        update_score(human, computer)
         display_winner
-        display_score
-        if series_winner(human, computer)
-          display_series_winner
-          break
-        end
+        break if series_winner(human, computer)
       end
-      display_goodbye_message
       break unless play_again?
     end
+    display_goodbye_message
   end
 end
 
-# Instantiating RPSGame and calling play on it
 RPSGame.new.play
