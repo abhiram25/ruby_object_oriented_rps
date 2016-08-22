@@ -1,5 +1,3 @@
-require 'pry'
-
 class Move
   VALUES = ["rock", "paper", "scissors", "lizard", "spock"].freeze
   def initialize(value)
@@ -99,7 +97,7 @@ class Computer < Player
 
   def initialize
     super
-    @losing_moves = []
+    self.losing_moves = []
   end
 
   def set_name
