@@ -1,19 +1,20 @@
-require 'pry'
+class Student
+  @@number_of_students = 0
 
-# Write a method that takes one argument, a positive integer,
-# and returns the sum of its digits.
+  def initialize(name, course)
+    @@number_of_students += 1
+    @name = name
+    @course = course
+  end
 
-# Given the integer, split the integer into individual digits
-# Convert the integer into a string and save it to a variable
-# called splitted integer.
-
-# iterate through the splitted_integer array and
-# convert each character into a number
-
-def sum(integer)
-	integer.to_s.chars.map {|num| num.to_i}.inject(:+)
+  def self.number_of_students
+    @@number_of_students
+  end
 end
 
-puts sum(23) == 5
-puts sum(496) == 19
-puts sum(123_456_789) == 45
+puts Student.number_of_students   # => 0
+
+dog1 = Student.new("Jason", 100)
+dog2 = Student.new("Abhi", 100)
+
+puts Student.number_of_students    # => 2
